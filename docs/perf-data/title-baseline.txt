@@ -1,0 +1,43 @@
+# metalperftrace 实测数据样例（M1 Pro 16GB / macOS 27）
+
+> 采集方式：`metalperftrace collect --last 60s DIR` + `metalperftrace overview --json`
+> 场景：标题界面，垂直同步开启（锁 ~30fps）。数值随系统负载波动，仅供对照。
+
+## 1) Wine 11.0 + DXMT（稳定方案）
+
+```
+[wine pid:48161]
+	Mem: 2770.2 MiB (2822.5 Peak, 551.0 Metal)
+	Total CPU Time: 117.243s (51.87% Sys, 48.13% User)
+	Instructions: 612.27B (98.77% P, 1.23% E)
+	Cycles: 350.28B (97.03% P, 2.97% E)
+	Disk Reads / Writes: 405.34 / 15.71 MiB (Logical Write 6.51)
+
+  CAMetalLayer: WineMetalView (1512x982)  Interval 29.149s  Active 20.795s
+	28.2 FPS  485 Frames  6 Skipped
+	Frame Time           avg:  35.51ms  min:   1.75  max: 266.67  stddev:  20.84
+	CPU Begin-to-Present avg:   5.88ms  min:   1.99  max:  31.58  stddev:   4.04
+	On-GPU Time          avg:   7.80ms  min:   1.47  max:  20.85  stddev:   5.17
+	Next Drawable Wait   avg:   0.02ms  min:   0.00  max:   5.26  stddev:   0.15
+```
+
+## 2) Wine 11.20 + D3DMetal DX12（实验，反作弊不兼容）
+
+```
+	Mem: 5194.2 MiB (5273.0 Peak, 1035.0 Metal)
+	29.2 FPS  805 Frames
+	Frame Time           avg:  33.76ms  stddev:  6.48
+	CPU Begin-to-Present avg:  33.71ms
+	On-GPU Time          avg:  15.05ms
+	Shader Compilation Time: 64.22s (首次运行时更长)
+```
+
+注：该方案能进标题界面且内存/显存更低，但进入游戏世界时
+HoYoProtect（`MHYPBase.dll`）崩溃，已放弃，详见 `../EXPERIMENTS.md`。
+
+## 3) 解读要点
+
+- 标题界面受垂直同步影响，FPS 被锁 ~30，不能直接比较“上限性能”；
+- 帧时间标准差（stddev）比平均 FPS 更能反映卡顿；
+- GPU 时间 ~8-15ms 而帧时间 ~35ms → 瓶颈不在 GPU；
+- 内存 2.8GB（标题）到 ~10GB（游戏内高画质）之间变化，16GB 机器需留意。

@@ -1,0 +1,25 @@
+# 忽略运行时、日志与个人路径文件
+
+# 本地运行时/备份（体积大，不入库）
+runtime/
+runtimes/
+wine-*/
+*.tar.xz
+*.tar.gz
+*.zip
+
+# 日志与 trace
+*.log
+*.atrc
+*.dmp
+logs/
+out/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# 个人配置
+launch.conf
+*.local.sh
